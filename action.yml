@@ -1,0 +1,74 @@
+name: Kiro Reviewer
+description: Reviews pull requests with the Kiro Reviewer service, posts inline findings and a summary, and keeps one review going across pushes.
+inputs:
+  kiro-api-key:
+    description: A Kiro API key, from a repository secret. Falls back to the KIRO_API_KEY environment variable.
+    required: false
+  endpoint:
+    description: The Kiro service origin. Overrides region. Defaults to https://app.kiro.dev. Must be a bare https origin, since the key is sent there. Only Kiro origins are accepted unless allow-custom-endpoint is true.
+    required: false
+  allow-custom-endpoint:
+    description: Allow an endpoint that is not a known Kiro origin. The API key is sent to that host.
+    required: false
+    default: 'false'
+  region:
+    description: 'The Kiro region: us-east-1 (default) or eu-central-1 (fra). Picks the matching https://<region>.app.kiro.dev origin; us-east-1 is https://app.kiro.dev.'
+    required: false
+  level:
+    description: quick, standard or deep.
+    required: false
+    default: standard
+  context-rounds:
+    description: Rounds (0 to 2) in which the reviewer may ask for more files. The action answers them from the checkout. 0 turns requests off.
+    required: false
+    default: '2'
+  include-changed-files:
+    description: Send the full post-change contents of the modified and renamed files as context (up to 20 files and 200 KB). Added files are not attached, since the diff carries them whole.
+    required: false
+    default: 'true'
+  iteration-budget:
+    description: Iterations (1 to 5) a PR's review can use across pushes before a new review starts.
+    required: false
+    default: '5'
+  skip-drafts:
+    description: Skip draft pull requests. They are reviewed when marked ready for review, or with a /kiro-review comment.
+    required: false
+    default: 'true'
+  skip-existing:
+    description: Skip when the same diff already has a completed review with no blocking findings under the same Kiro account.
+    required: false
+    default: 'true'
+  fail-on-blocking:
+    description: Fail the job when the review has unsuppressed blocking findings.
+    required: false
+    default: 'true'
+  fail-on-skipped:
+    description: Fail the job when the pull request is too large to review (over the service limits). Set to false to only warn.
+    required: false
+    default: 'true'
+  commit-status:
+    description: Set a commit status on the PR head. Use it as the required check, since a /kiro-review run is not a PR check.
+    required: false
+    default: 'true'
+  status-context:
+    description: Name of the commit status.
+    required: false
+    default: Kiro Reviewer
+  labels:
+    description: "Label the PR 'kiro-review: blocking' or 'kiro-review: clean'."
+    required: false
+    default: 'true'
+  github-token:
+    description: Token used to post to the PR. Use the workflow GITHUB_TOKEN; the duplicate checks only recognise comments by bots.
+    required: false
+    default: ${{ github.token }}
+outputs:
+  result:
+    description: reviewed, partial, failed, skipped-existing, skipped-fork, skipped-draft, skipped-limit, skipped-empty, paused, resumed or ignored-command.
+  review-id:
+    description: The review id, when one was used or created.
+  blocking:
+    description: Unsuppressed blocking findings, when reviewed.
+runs:
+  using: node24
+  main: dist/index.mjs

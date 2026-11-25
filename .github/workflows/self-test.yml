@@ -1,0 +1,44 @@
+name: self-test
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  # /kiro-review commands. GitHub runs issue_comment workflows from the default branch only.
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: write
+concurrency:
+  group: kiro-review-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+       startsWith(github.event.comment.body, '/kiro-review'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # KIRO_API_KEY is a secret of this environment only. A run waits for a required reviewer before it can read it.
+    environment: kiro-review
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # For a command this is empty and the default branch is checked out; the action switches to the PR head.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      # The action runs from the default branch, never from the pull request's own checkout.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .trusted-action
+          persist-credentials: false
+      - id: review
+        uses: ./.trusted-action
+        with:
+          kiro-api-key: ${{ secrets.KIRO_API_KEY }}
+      - if: always()
+        run: echo "result=${{ steps.review.outputs.result }} review-id=${{ steps.review.outputs.review-id }} blocking=${{ steps.review.outputs.blocking }}"
