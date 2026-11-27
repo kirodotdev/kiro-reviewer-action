@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.svg" alt="Kiro Reviewer: AI code review on every pull request" width="100%"></p>
+
 # Kiro Reviewer GitHub Action
 
 Review pull requests with Kiro directly in GitHub. Kiro posts findings on the lines they affect and keeps one summary comment up to date as you push fixes. You can reply to a finding in its thread or use the **Kiro Reviewer** commit status to require a review before merging.
