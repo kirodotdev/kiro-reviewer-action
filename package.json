@@ -19,11 +19,11 @@
     "@tsconfig/node24": "24.0.6",
     "@types/node": "24.19.2",
     "esbuild": "0.28.2",
-    "eslint": "10.14.0",
+    "eslint": "10.16.0",
     "eslint-config-prettier": "10.1.8",
     "prettier": "3.10.1",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.2",
+    "typescript-eslint": "8.74.0",
     "vitest": "4.1.12"
   }
 }
