@@ -18,7 +18,7 @@ Review pull requests with Kiro directly in GitHub. Kiro posts findings on the li
 
 ### 2. Add the workflow
 
-Create `.github/workflows/kiro-review.yml` with the contents below. To fill in `<release-commit-sha>`, open **Releases** in the action's repository, select the version you want, and follow its commit link. Copy the full 40-character SHA from the commit page. If no release is available, wait for one before enabling the workflow; do not substitute a branch or movable tag.
+Create `.github/workflows/kiro-review.yml` with the contents below. It uses release `v0.0.2`; to use a later version, replace the tag with one from the action's **Releases** page.
 
 ```yaml
 name: Kiro Reviewer
@@ -50,7 +50,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: kirodotdev/kiro-reviewer-action@<release-commit-sha>
+      - uses: kirodotdev/kiro-reviewer-action@v0.0.2
         with:
           kiro-api-key: ${{ secrets.KIRO_API_KEY }}
 ```
