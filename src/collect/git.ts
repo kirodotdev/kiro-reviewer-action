@@ -100,15 +100,20 @@ export interface CollectedRepo {
   headRef: string;
   mergeBase: string;
   diff: string;
-  rules: { reviewMd?: string };
+  rules: { reviewRulesYaml?: string; reviewMd?: string };
   context: Array<{ path: string; content: string }>;
   /** Commit subjects/bodies for merge-base..HEAD, newest first; author/email/timestamp excluded. */
   commits: Array<{ subject: string; body?: string }>;
 }
 
-async function showRuleFile(top: string, mergeBase: string, name: string): Promise<string | undefined> {
+async function showRuleFile(
+  top: string,
+  mergeBase: string,
+  name: string,
+  limit: 'rules.autosdeYamlBytes' | 'rules.reviewMdBytes',
+): Promise<string | undefined> {
   try {
-    return await gitText(top, ['show', `${mergeBase}:${name}`], 'rules.reviewMdBytes');
+    return await gitText(top, ['show', `${mergeBase}:${name}`], limit);
   } catch (e) {
     if (e instanceof GitFailure && /does not exist|exists on disk, but not in/.test(e.stderr)) return undefined;
     if (e instanceof ToolError) throw e;
@@ -574,8 +579,9 @@ export async function collectRepo(input: CollectInput): Promise<CollectedRepo> {
   }
   if (diff.trim() === '') throw new ToolError('EMPTY_DIFF', 'There are no changes between the merge-base and HEAD.');
 
-  // Step 6: REVIEW.md from the merge-base, so a PR can't rewrite its own review guidance.
-  const reviewMd = await showRuleFile(top, mergeBase, 'REVIEW.md');
+  // Step 6: rule files from the merge-base, so a PR can't rewrite its own review rules.
+  const reviewRulesYaml = await showRuleFile(top, mergeBase, 'REVIEW_RULES.yaml', 'rules.autosdeYamlBytes');
+  const reviewMd = await showRuleFile(top, mergeBase, 'REVIEW.md', 'rules.reviewMdBytes');
 
   // Commit messages for merge-base..HEAD.
   const commits = await collectCommits(top, mergeBase, headSha);
@@ -604,7 +610,10 @@ export async function collectRepo(input: CollectInput): Promise<CollectedRepo> {
     headRef,
     mergeBase,
     diff,
-    rules: reviewMd !== undefined ? { reviewMd } : {},
+    rules: {
+      ...(reviewRulesYaml !== undefined ? { reviewRulesYaml } : {}),
+      ...(reviewMd !== undefined ? { reviewMd } : {}),
+    },
     context,
     commits,
   };

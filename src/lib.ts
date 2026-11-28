@@ -526,8 +526,8 @@ export interface PriorReviewDeps {
   /** Merge-base the action reviews against. */
   mergeBase: string;
   level: string;
-  /** The REVIEW.md the action would send. */
-  rules: { reviewMd?: string };
+  /** The rule files the action would send. */
+  rules: { reviewRulesYaml?: string; reviewMd?: string };
   list: (nextToken?: string) => Promise<ListReviewsResponse>;
   payload: (reviewId: string, iteration: number) => Promise<IterationPayloadResponse>;
   /** True when the review ran with every reviewer and no budget or deadline cut-off. */
@@ -559,6 +559,7 @@ export async function findPriorReview(d: PriorReviewDeps): Promise<ReviewSummary
       try {
         const p = await d.payload(r.reviewId, r.latestIteration);
         if (p.diff !== d.diff || p.base.commit !== d.mergeBase) continue;
+        if ((p.rules?.autosdeYaml ?? '') !== (d.rules.reviewRulesYaml ?? '')) continue;
         if ((p.rules?.reviewMd ?? '') !== (d.rules.reviewMd ?? '')) continue;
         if (await d.complete(r.reviewId, r.latestIteration)) return r;
       } catch {

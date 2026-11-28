@@ -41,6 +41,7 @@ export interface RefCommit {
 export interface RulesPayload {
   source: 'base';
   revision: string;
+  autosdeYaml?: string;
   reviewMd?: string;
 }
 

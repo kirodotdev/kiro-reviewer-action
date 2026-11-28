@@ -34,7 +34,7 @@ export interface BuildPayloadInput {
   headSha: string;
   includeUncommitted: boolean;
   diff: string;
-  rules?: { reviewMd?: string };
+  rules?: { reviewRulesYaml?: string; reviewMd?: string };
   context: Array<{ path: string; content: string }>;
   repo: string;
   clientVersion: string;
@@ -77,8 +77,15 @@ export function buildPayload(i: BuildPayloadInput): SubmitRequest {
   if (i.intent !== undefined && i.intent !== '') payload.intent = i.intent;
   if (i.commits && i.commits.length > 0) payload.commits = i.commits;
   if (i.reviewId && i.responses && i.responses.length > 0) payload.responses = i.responses;
-  if (i.rules?.reviewMd !== undefined) {
-    payload.rules = { source: 'base', revision: i.mergeBase, ...i.rules };
+  if (i.rules?.reviewRulesYaml !== undefined || i.rules?.reviewMd !== undefined) {
+    const { reviewRulesYaml, reviewMd } = i.rules;
+    payload.rules = {
+      source: 'base',
+      revision: i.mergeBase,
+      // The BFF still names this field autosdeYaml.
+      ...(reviewRulesYaml !== undefined ? { autosdeYaml: reviewRulesYaml } : {}),
+      ...(reviewMd !== undefined ? { reviewMd } : {}),
+    };
   }
   if (i.context.length > 0) payload.context = i.context;
   return payload;
