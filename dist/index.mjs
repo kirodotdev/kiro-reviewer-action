@@ -3441,7 +3441,7 @@ ${pr.body ?? ""}`.trim(), "intent").text;
       contextRounds = 0;
     }
   }
-  let context = input(env, "include-changed-files", "true") === "true" ? await changedFileContext(repo.toplevel, headSha, info.files, LIMITS.contextTotalBytes) : [];
+  let context = input(env, "include-changed-files", "false") === "true" ? await changedFileContext(repo.toplevel, headSha, info.files, LIMITS.contextTotalBytes) : [];
   checkPayloadLimits({
     diff: diff.text,
     diffFiles: info.files.length,
