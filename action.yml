@@ -25,7 +25,7 @@ inputs:
   include-changed-files:
     description: Send the full post-change contents of the modified and renamed files as context (up to 20 files and 200 KB). Added files are not attached, since the diff carries them whole.
     required: false
-    default: 'true'
+    default: 'false'
   iteration-budget:
     description: Iterations (1 to 20) a PR's review can use across pushes before a new review starts.
     required: false

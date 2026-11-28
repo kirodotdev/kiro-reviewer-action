@@ -281,7 +281,7 @@ async function review(env: Env, gh: Github, pr: PullRequestInfo): Promise<number
     }
   }
   let context =
-    input(env, 'include-changed-files', 'true') === 'true'
+    input(env, 'include-changed-files', 'false') === 'true'
       ? await changedFileContext(repo.toplevel, headSha, info.files, LIMITS.contextTotalBytes)
       : [];
 
