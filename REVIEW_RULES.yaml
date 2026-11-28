@@ -1,0 +1,22 @@
+custom-rules:
+  - id: readme-in-sync
+    rule: >-
+      README.md must match the code. A change to user-visible behavior must
+      update the README section that documents it, in the same PR: action.yml
+      inputs, outputs and defaults (Action inputs, and any recipe that sets
+      them); limits in src/limits.ts (What code does Kiro receive?, Why was a
+      review skipped?, Give Kiro repository-specific guidance); what
+      src/collect/ sends to the service (What code does Kiro receive?); skip
+      and result handling in src/main.ts (Why was a review skipped?, Review
+      drafts automatically); /kiro-review commands and thread handling in
+      src/conversation.ts (Work with review findings); supported REVIEW.md and
+      REVIEW_RULES.yaml fields (Give Kiro repository-specific guidance);
+      endpoint, region and API key handling (Add your Kiro API key to GitHub,
+      Use the Frankfurt region, Optional: use a protected environment); and
+      required workflow triggers and permissions (Add the workflow). Also flag
+      README examples that no longer match the code, such as YAML that sets a
+      removed or renamed input or a wrong default. Name the README section
+      that is wrong or missing. Internal refactors with no user-visible effect
+      are exempt.
+    blocking: true
+    file-patterns: ['action.yml', 'src/**/*.ts', 'README.md']
