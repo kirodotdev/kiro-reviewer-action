@@ -95,7 +95,7 @@ To give Kiro repository-specific guidance, add a `REVIEW.md` file at the reposit
 - Don't comment on formatting; Prettier handles it.
 ```
 
-This repository's own [`REVIEW.md`](REVIEW.md) asks Kiro to flag PRs that change user-visible behavior without updating this README.
+This repository's own [`REVIEW.md`](REVIEW.md) asks Kiro to review README changes from a new user's point of view, and its [`REVIEW_RULES.yaml`](REVIEW_RULES.yaml) blocks PRs that change user-visible behavior without updating this README.
 
 For rules Kiro must enforce, add a `REVIEW_RULES.yaml` file at the repository root. Like `REVIEW.md`, it is read from the common ancestor, redacted before it is sent, and limited to 128 KB.
 
