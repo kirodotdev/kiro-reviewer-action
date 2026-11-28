@@ -85,6 +85,18 @@ Repository owners, members, and collaborators can also post `/kiro-review pause`
 
 To give Kiro repository-specific guidance, add a `REVIEW.md` file at the repository root. Include conventions to check or areas that need extra attention. Kiro uses the version at the common ancestor of the PR and its base branch, so edits to the guidance take effect for later PRs after they merge.
 
+`REVIEW.md` is plain Markdown that Kiro reads alongside the diff, written the way you would brief a human reviewer. It is redacted before it is sent and limited to 128 KB. For example:
+
+```markdown
+# Review guidance
+
+- All database access goes through `src/db/`. Flag queries built anywhere else.
+- Changes to the public API in `src/api/` need a matching update to `docs/api.md`.
+- Don't comment on formatting; Prettier handles it.
+```
+
+This repository's own [`REVIEW.md`](REVIEW.md) asks Kiro to flag PRs that change user-visible behavior without updating this README.
+
 For rules Kiro must enforce, add a `REVIEW_RULES.yaml` file at the repository root. Like `REVIEW.md`, it is read from the common ancestor, redacted before it is sent, and limited to 128 KB.
 
 ```yaml
