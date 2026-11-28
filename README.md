@@ -18,7 +18,7 @@ Review pull requests with Kiro directly in GitHub. Kiro posts findings on the li
 
 ### 2. Add the workflow
 
-Create `.github/workflows/kiro-review.yml` with the contents below. It uses release `v0.0.1`; to use a later version, replace the tag with one from the action's **Releases** page.
+Create `.github/workflows/kiro-review.yml` with the contents below. It uses release `v0.0.2`; to use a later version, replace the tag with one from the action's **Releases** page.
 
 ```yaml
 name: Kiro Reviewer
