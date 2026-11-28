@@ -1,0 +1,12 @@
+custom-rules:
+  - id: readme-in-sync
+    rule: >-
+      A change to user-visible behavior must update README.md in the same PR.
+      This covers action.yml inputs, outputs and defaults; limits in
+      src/limits.ts; what src/collect/ sends to the service; skip and result
+      handling in src/main.ts; /kiro-review commands in src/conversation.ts;
+      supported REVIEW.md and REVIEW_RULES.yaml fields; and the required
+      workflow triggers and permissions. Name the README section that is now
+      wrong or missing. Internal refactors and test-only changes are exempt.
+    blocking: true
+    file-patterns: ['action.yml', 'src/**/*.ts']
