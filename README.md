@@ -50,7 +50,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: kirodotdev/kiro-reviewer-action@v0.0.1
+      - uses: kirodotdev/kiro-reviewer-action@v0.0.2
         with:
           kiro-api-key: ${{ secrets.KIRO_API_KEY }}
 ```
