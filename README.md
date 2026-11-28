@@ -85,6 +85,44 @@ Repository owners, members, and collaborators can also post `/kiro-review pause`
 
 To give Kiro repository-specific guidance, add a `REVIEW.md` file at the repository root. Include conventions to check or areas that need extra attention. Kiro uses the version at the common ancestor of the PR and its base branch, so edits to the guidance take effect for later PRs after they merge.
 
+For rules Kiro must enforce, add a `REVIEW_RULES.yaml` file at the repository root. Like `REVIEW.md`, it is read from the common ancestor, redacted before it is sent, and limited to 128 KB.
+
+```yaml
+# Findings below this confidence (1-10) are dropped. Default: 8.
+default-rule:
+  confidence-threshold: 7
+
+custom-rules:
+  # Blocking: any finding against this rule fails the check.
+  - id: no-sql-concat
+    rule: Build SQL with parameters, never by string concatenation or template literals.
+    blocking: true
+    file-patterns: ['src/**/*.ts']
+
+  - id: handler-input-validation
+    rule: >-
+      Every API handler validates its request body with the zod schema in
+      src/schemas before using it. Flag handlers that read req.body directly.
+    blocking: true
+    file-patterns: ['src/handlers/**/*.ts']
+
+  # Non-blocking: reported, and fails the check only if its severity is blocking.
+  - id: no-console-log
+    rule: Use the logger in src/log.ts instead of console.log. Test files are exempt.
+    file-patterns: ['src/**/*.ts']
+
+  # No file-patterns: applies to every PR.
+  - id: changelog-entry
+    rule: User-visible behavior changes need an entry in CHANGELOG.md.
+
+file-exclusions:
+  use-defaults: true # keep the built-in generated, fixture, lock and vendored skips
+  exclude: ['docs/gen/**', 'src/**/*.pb.ts']
+  include: ['test/fixtures/contracts/**'] # review these even though fixtures are skipped by default
+```
+
+Each rule needs an `id` (letters, digits, `-` and `_`, at most 64 characters, unique) and a `rule` (at most 4,000 characters). `blocking` defaults to `false`. A rule with `file-patterns` applies only when the PR touches a matching file; a file can have up to 20 rules, each with up to 20 patterns. An unknown field or invalid YAML fails the review with `UNSUPPORTED_RULE_FIELD` or `INVALID_RULES`.
+
 ### What code does Kiro receive?
 
 The action sends the redacted diff, commit messages, PR title and description, and repository review guidance. By default it also attaches modified and renamed text files (up to 20 files and 200 KB total) and sends tracked filenames so Kiro can request more context. The action answers up to two rounds of requests automatically; it skips secret-like paths and redacts the answers. To disable file attachments and context requests, set **both** `include-changed-files: false` and `context-rounds: 0`.

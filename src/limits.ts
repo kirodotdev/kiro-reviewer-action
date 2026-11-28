@@ -18,6 +18,7 @@ export const LIMITS = {
   contextFiles: 20,
   contextFileBytes: 100_000,
   contextTotalBytes: 200_000,
+  rulesAutosdeYamlBytes: 131_072,
   rulesReviewMdBytes: 131_072,
   pathChars: 512,
   suppressReasonChars: 500,
@@ -46,6 +47,7 @@ export type LimitName =
   | 'context.files'
   | 'context.fileBytes'
   | 'context.totalBytes'
+  | 'rules.autosdeYamlBytes'
   | 'rules.reviewMdBytes'
   | 'path.chars'
   | 'suppress.reasonChars'
@@ -87,7 +89,7 @@ export interface PayloadLimitInput {
   contextRounds?: number;
   manifest?: readonly string[];
   context: ReadonlyArray<{ path: string; content: string }>;
-  rules?: { reviewMd?: string };
+  rules?: { reviewRulesYaml?: string; reviewMd?: string };
   /** Git metadata. */
   intent?: string;
   commits?: ReadonlyArray<{ subject: string; body?: string }>;
@@ -116,6 +118,9 @@ export function checkPayloadLimits(p: PayloadLimitInput): void {
     total += bytes;
   }
   checkLimit('context.totalBytes', LIMITS.contextTotalBytes, total);
+  if (p.rules?.reviewRulesYaml !== undefined) {
+    checkLimit('rules.autosdeYamlBytes', LIMITS.rulesAutosdeYamlBytes, utf8Bytes(p.rules.reviewRulesYaml));
+  }
   if (p.rules?.reviewMd !== undefined) {
     checkLimit('rules.reviewMdBytes', LIMITS.rulesReviewMdBytes, utf8Bytes(p.rules.reviewMd));
   }

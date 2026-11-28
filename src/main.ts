@@ -240,9 +240,11 @@ async function review(env: Env, gh: Github, pr: PullRequestInfo): Promise<number
     );
   }
   const diff = redactDiff(repo.diff);
-  let reviewMd = repo.rules.reviewMd;
-  if (reviewMd !== undefined) reviewMd = redactText(reviewMd, 'REVIEW.md').text;
-  const rules = reviewMd !== undefined ? { reviewMd } : {};
+  const { reviewRulesYaml: rawYaml, reviewMd: rawMd } = repo.rules;
+  const rules = {
+    ...(rawYaml !== undefined ? { reviewRulesYaml: redactText(rawYaml, 'REVIEW_RULES.yaml').text } : {}),
+    ...(rawMd !== undefined ? { reviewMd: redactText(rawMd, 'REVIEW.md').text } : {}),
+  };
   const intentText = redactText(`${pr.title}\n\n${pr.body ?? ''}`.trim(), 'intent').text;
   const intent = [...intentText].slice(0, LIMITS.intentChars).join('');
   const commits = repo.commits.map((c, i) => ({

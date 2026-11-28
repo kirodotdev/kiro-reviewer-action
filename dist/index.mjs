@@ -1402,6 +1402,7 @@ var LIMITS = {
   contextFiles: 20,
   contextFileBytes: 1e5,
   contextTotalBytes: 2e5,
+  rulesAutosdeYamlBytes: 131072,
   rulesReviewMdBytes: 131072,
   pathChars: 512,
   suppressReasonChars: 500,
@@ -1457,6 +1458,9 @@ function checkPayloadLimits(p) {
     total += bytes;
   }
   checkLimit("context.totalBytes", LIMITS.contextTotalBytes, total);
+  if (p.rules?.reviewRulesYaml !== void 0) {
+    checkLimit("rules.autosdeYamlBytes", LIMITS.rulesAutosdeYamlBytes, utf8Bytes(p.rules.reviewRulesYaml));
+  }
   if (p.rules?.reviewMd !== void 0) {
     checkLimit("rules.reviewMdBytes", LIMITS.rulesReviewMdBytes, utf8Bytes(p.rules.reviewMd));
   }
@@ -1620,9 +1624,9 @@ function decodeText(buf) {
   }
 }
 __name(decodeText, "decodeText");
-async function showRuleFile(top, mergeBase, name) {
+async function showRuleFile(top, mergeBase, name, limit) {
   try {
-    return await gitText(top, ["show", `${mergeBase}:${name}`], "rules.reviewMdBytes");
+    return await gitText(top, ["show", `${mergeBase}:${name}`], limit);
   } catch (e) {
     if (e instanceof GitFailure && /does not exist|exists on disk, but not in/.test(e.stderr)) return void 0;
     if (e instanceof ToolError) throw e;
@@ -1973,7 +1977,8 @@ async function collectRepo(input2) {
     }
   }
   if (diff.trim() === "") throw new ToolError("EMPTY_DIFF", "There are no changes between the merge-base and HEAD.");
-  const reviewMd = await showRuleFile(top, mergeBase, "REVIEW.md");
+  const reviewRulesYaml = await showRuleFile(top, mergeBase, "REVIEW_RULES.yaml", "rules.autosdeYamlBytes");
+  const reviewMd = await showRuleFile(top, mergeBase, "REVIEW.md", "rules.reviewMdBytes");
   const commits = await collectCommits(top, mergeBase, headSha);
   const context = [];
   for (const rel of input2.contextFiles) {
@@ -1997,7 +2002,10 @@ async function collectRepo(input2) {
     headRef,
     mergeBase,
     diff,
-    rules: reviewMd !== void 0 ? { reviewMd } : {},
+    rules: {
+      ...reviewRulesYaml !== void 0 ? { reviewRulesYaml } : {},
+      ...reviewMd !== void 0 ? { reviewMd } : {}
+    },
     context,
     commits
   };
@@ -2066,8 +2074,15 @@ function buildPayload(i) {
   if (i.intent !== void 0 && i.intent !== "") payload2.intent = i.intent;
   if (i.commits && i.commits.length > 0) payload2.commits = i.commits;
   if (i.reviewId && i.responses && i.responses.length > 0) payload2.responses = i.responses;
-  if (i.rules?.reviewMd !== void 0) {
-    payload2.rules = { source: "base", revision: i.mergeBase, ...i.rules };
+  if (i.rules?.reviewRulesYaml !== void 0 || i.rules?.reviewMd !== void 0) {
+    const { reviewRulesYaml, reviewMd } = i.rules;
+    payload2.rules = {
+      source: "base",
+      revision: i.mergeBase,
+      // The BFF still names this field autosdeYaml.
+      ...reviewRulesYaml !== void 0 ? { autosdeYaml: reviewRulesYaml } : {},
+      ...reviewMd !== void 0 ? { reviewMd } : {}
+    };
   }
   if (i.context.length > 0) payload2.context = i.context;
   return payload2;
@@ -2842,6 +2857,7 @@ async function findPriorReview(d) {
       try {
         const p = await d.payload(r.reviewId, r.latestIteration);
         if (p.diff !== d.diff || p.base.commit !== d.mergeBase) continue;
+        if ((p.rules?.autosdeYaml ?? "") !== (d.rules.reviewRulesYaml ?? "")) continue;
         if ((p.rules?.reviewMd ?? "") !== (d.rules.reviewMd ?? "")) continue;
         if (await d.complete(r.reviewId, r.latestIteration)) return r;
       } catch {
@@ -3387,9 +3403,11 @@ async function review(env, gh, pr) {
     );
   }
   const diff = redactDiff(repo.diff);
-  let reviewMd = repo.rules.reviewMd;
-  if (reviewMd !== void 0) reviewMd = redactText(reviewMd, "REVIEW.md").text;
-  const rules = reviewMd !== void 0 ? { reviewMd } : {};
+  const { reviewRulesYaml: rawYaml, reviewMd: rawMd } = repo.rules;
+  const rules = {
+    ...rawYaml !== void 0 ? { reviewRulesYaml: redactText(rawYaml, "REVIEW_RULES.yaml").text } : {},
+    ...rawMd !== void 0 ? { reviewMd: redactText(rawMd, "REVIEW.md").text } : {}
+  };
   const intentText = redactText(`${pr.title}
 
 ${pr.body ?? ""}`.trim(), "intent").text;

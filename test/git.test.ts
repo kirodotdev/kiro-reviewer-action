@@ -100,6 +100,20 @@ describe('collectRepo', () => {
     expect(out.headRef).toBe('feature');
   });
 
+  it('reads REVIEW_RULES.yaml from the merge-base, not the branch', async () => {
+    const r = repo();
+    git(r, 'checkout', '-q', 'mainline');
+    write(r, 'REVIEW_RULES.yaml', 'custom-rules: []\n');
+    git(r, 'add', '-A');
+    git(r, 'commit', '-q', '-m', 'rules');
+    git(r, 'checkout', '-q', 'feature');
+    git(r, 'merge', '-q', '--no-edit', 'mainline');
+    write(r, 'REVIEW_RULES.yaml', 'custom-rules:\n  - id: head\n    rule: x\n');
+    git(r, 'commit', '-q', '-am', 'edit rules');
+    const out = await collectRepo({ repoPath: r, base: 'mainline', includeUncommitted: false, contextFiles: [] });
+    expect(out.rules.reviewRulesYaml).toBe('custom-rules: []\n');
+  });
+
   it('uses the merge-base, not the base tip, when the base moved on', async () => {
     const r = repo();
     const fork = git(r, 'rev-parse', 'mainline');
